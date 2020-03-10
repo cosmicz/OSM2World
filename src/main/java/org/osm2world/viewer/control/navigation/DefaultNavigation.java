@@ -11,19 +11,17 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.util.HashSet;
 import java.util.Set;
-
 import javax.swing.Timer;
 import javax.swing.event.MouseInputListener;
-
 import org.osm2world.core.math.VectorXYZ;
 import org.osm2world.core.target.common.rendering.Camera;
 import org.osm2world.viewer.model.RenderOptions;
 import org.osm2world.viewer.view.ViewerFrame;
 
+public class DefaultNavigation
+	extends MouseAdapter implements KeyListener, MouseInputListener {
 
-public class DefaultNavigation extends MouseAdapter implements KeyListener, MouseInputListener {
-
-	private final static double ANGLE_INCREMENT = Math.PI/200;
+	private final static double ANGLE_INCREMENT = Math.PI / 200;
 	private final static double MOVEMENT_INCREMENT = 2.0;
 
 	private final RenderOptions renderOptions;
@@ -31,7 +29,8 @@ public class DefaultNavigation extends MouseAdapter implements KeyListener, Mous
 
 	private final Timer timer;
 
-	public DefaultNavigation(ViewerFrame viewerFrame, RenderOptions renderOptions) {
+	public DefaultNavigation(ViewerFrame viewerFrame,
+							 RenderOptions renderOptions) {
 
 		this.viewerFrame = viewerFrame;
 		this.renderOptions = renderOptions;
@@ -87,15 +86,15 @@ public class DefaultNavigation extends MouseAdapter implements KeyListener, Mous
 			} else if (rotationDrag) {
 
 				/* view left/right */
-				camera.rotateY(movementX/100);
+				camera.rotateY(movementX / 100);
 
 				/* view up/down */
-				camera.mapPitch(movementY/-100);
+				camera.mapPitch(movementY / -100);
 
 			} else if (movementDrag) {
 
 				/* roll left/right */
-				camera.roll(movementX/100);
+				camera.roll(movementX / 100);
 
 				/* move up/down */
 				camera.moveMapUp(movementY);
@@ -103,7 +102,6 @@ public class DefaultNavigation extends MouseAdapter implements KeyListener, Mous
 		}
 
 		previousMousePoint = currentMousePoint;
-
 	}
 
 	@Override
@@ -149,7 +147,6 @@ public class DefaultNavigation extends MouseAdapter implements KeyListener, Mous
 	}
 
 	private final ActionListener KEYBOARD_TASK = new ActionListener() {
-
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
@@ -205,6 +202,14 @@ public class DefaultNavigation extends MouseAdapter implements KeyListener, Mous
 						case KeyEvent.VK_MINUS:
 						case KeyEvent.VK_O:
 							zoom(false, 0.5);
+							break;
+						case KeyEvent.VK_OPEN_BRACKET:
+							renderOptions.plusMinutes(-15);
+							viewerFrame.resetCanvas();
+							break;
+						case KeyEvent.VK_CLOSE_BRACKET:
+							renderOptions.plusMinutes(15);
+							viewerFrame.resetCanvas();
 							break;
 						}
 					}

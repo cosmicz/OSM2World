@@ -9,14 +9,12 @@ public class JOGLRenderingParameters {
 
 	public static enum Winding {
 
-		CW(GL_CW), CCW(GL_CCW);
+		CW(GL_CW),
+		CCW(GL_CCW);
 
 		int glConstant;
 
-		private Winding(int glConstant) {
-			this.glConstant = glConstant;
-		}
-
+		private Winding(int glConstant) { this.glConstant = glConstant; }
 	}
 
 	final Winding frontFace;
@@ -71,9 +69,11 @@ public class JOGLRenderingParameters {
 	 *            match the world bounding box
 	 */
 	public JOGLRenderingParameters(
-			Winding frontFace, boolean wireframe, boolean useZBuffer, boolean drawBoundingBox, boolean useShadowVolumes,
-			boolean useShadowMaps, int shadowMapWidth, int shadowMapHeight, int shadowMapCameraFrustumPadding,
-			boolean useSSAO, int SSAOkernelSize, float SSAOradius, boolean overwriteProjectionClippingPlanes) {
+		Winding frontFace, boolean wireframe, boolean useZBuffer,
+		boolean drawBoundingBox, boolean useShadowVolumes,
+		boolean useShadowMaps, int shadowMapWidth, int shadowMapHeight,
+		int shadowMapCameraFrustumPadding, boolean useSSAO, int SSAOkernelSize,
+		float SSAOradius, boolean overwriteProjectionClippingPlanes) {
 
 		this.frontFace = frontFace;
 		this.wireframe = wireframe;
@@ -87,7 +87,8 @@ public class JOGLRenderingParameters {
 		this.useSSAO = useSSAO;
 		this.SSAOkernelSize = SSAOkernelSize;
 		this.SSAOradius = SSAOradius;
-		this.overwriteProjectionClippingPlanes = overwriteProjectionClippingPlanes;
+		this.overwriteProjectionClippingPlanes =
+			overwriteProjectionClippingPlanes;
 	}
 
 	/**
@@ -96,8 +97,8 @@ public class JOGLRenderingParameters {
 	 * @param wireframe   renders just a wireframe instead of filled surfaces
 	 * @param useZBuffer  enables the z buffer, should usually be true
 	 */
-	public JOGLRenderingParameters(
-			Winding frontFace, boolean wireframe, boolean useZBuffer) {
+	public JOGLRenderingParameters(Winding frontFace, boolean wireframe,
+								   boolean useZBuffer) {
 
 		this.frontFace = frontFace;
 		this.wireframe = wireframe;
@@ -129,5 +130,4 @@ public class JOGLRenderingParameters {
 		this.SSAOradius = 0;
 		this.overwriteProjectionClippingPlanes = false;
 	}
-
 }

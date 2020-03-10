@@ -1,9 +1,7 @@
 package org.osm2world.viewer.view.debug;
 
 import java.awt.Color;
-
 import javax.media.opengl.GL;
-
 import org.osm2world.core.GlobalValues;
 import org.osm2world.core.target.common.rendering.Camera;
 import org.osm2world.core.target.common.rendering.Projection;
@@ -37,7 +35,9 @@ public class HelpView extends DebugView {
 	@Override
 	public void renderTo(GL gl, Camera camera, Projection projection) {
 
-		if (!canBeUsed()) { return; }
+		if (!canBeUsed()) {
+			return;
+		}
 		if (textRenderer == null) {
 			if ("shader".equals(config.getString("joglImplementation"))) {
 				textRenderer = new TextRendererShader(gl.getGL2ES2());
@@ -48,17 +48,19 @@ public class HelpView extends DebugView {
 			textRenderer.setScale(scale);
 		}
 
-		textRenderer.drawTextTop("Use \"File\" > \"Open OSM file\" "
+		textRenderer.drawTextTop(
+			"Use \"File\" > \"Open OSM file\" "
 				+ "to load a file containing OpenStreetMap data.",
-				50, 50, Color.LIGHT_GRAY);
+			50, 50, Color.LIGHT_GRAY);
 
-		textRenderer.drawTextBottom("This is OSM2World " + GlobalValues.VERSION_STRING,
-				50, 100, Color.LIGHT_GRAY);
+		textRenderer.drawTextBottom("This is OSM2World+SunFlower " +
+										GlobalValues.VERSION_STRING,
+									50, 100, Color.LIGHT_GRAY);
 		textRenderer.drawTextBottom("Website: " + GlobalValues.OSM2WORLD_URI,
-				50, 75, Color.LIGHT_GRAY);
-		textRenderer.drawTextBottom("Usage instructions: " + GlobalValues.WIKI_URI,
-				50, 50, Color.LIGHT_GRAY);
-
+									50, 75, Color.LIGHT_GRAY);
+		textRenderer.drawTextBottom("Usage instructions: " +
+										GlobalValues.WIKI_URI,
+									50, 50, Color.LIGHT_GRAY);
 	}
 
 	/**
@@ -96,7 +98,6 @@ public class HelpView extends DebugView {
 
 	@Override
 	protected void fillTarget(JOGLTarget target) {
-		//do nothing, has its own renderTo implementation
+		// do nothing, has its own renderTo implementation
 	}
-
 }

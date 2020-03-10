@@ -3,13 +3,15 @@ package org.osm2world.viewer.view;
 import static java.awt.event.KeyEvent.*;
 import static java.util.Arrays.asList;
 
+import com.google.common.base.Function;
+import com.optivoltlabs.sunflower.SunPosition;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
 import javax.swing.ButtonGroup;
@@ -18,7 +20,6 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JRadioButtonMenuItem;
-
 import org.apache.commons.configuration.Configuration;
 import org.osm2world.core.map_elevation.creation.EleConstraintEnforcer;
 import org.osm2world.core.map_elevation.creation.InverseDistanceWeightingInterpolator;
@@ -76,12 +77,11 @@ import org.osm2world.viewer.view.debug.QuadtreeDebugView;
 import org.osm2world.viewer.view.debug.RoofDataDebugView;
 import org.osm2world.viewer.view.debug.ShadowView;
 import org.osm2world.viewer.view.debug.SkyboxView;
+import org.osm2world.viewer.view.debug.SunTimeView;
 import org.osm2world.viewer.view.debug.TerrainBoundaryAABBDebugView;
 import org.osm2world.viewer.view.debug.TerrainBoundaryDebugView;
 import org.osm2world.viewer.view.debug.WorldObjectNormalsDebugView;
 import org.osm2world.viewer.view.debug.WorldObjectView;
-
-import com.google.common.base.Function;
 
 public class ViewerFrame extends JFrame {
 
@@ -107,8 +107,8 @@ public class ViewerFrame extends JFrame {
 	 * @param configFile  properties (where config was loaded from), can be null
 	 * @param inputFile  osm data file to be loaded at viewer start, can be null
 	 */
-	public ViewerFrame(final Configuration config,
-			final File configFile, File inputFile) {
+	public ViewerFrame(final Configuration config, final File configFile,
+					   File inputFile) {
 
 		super("OSM2World Viewer");
 
@@ -124,26 +124,24 @@ public class ViewerFrame extends JFrame {
 		pack();
 
 		if (inputFile != null) {
-			new OpenOSMAction(this, data, renderOptions).openOSMFile(inputFile, true);
+			new OpenOSMAction(this, data, renderOptions)
+				.openOSMFile(inputFile, true);
 		}
-
 	}
 
 	private final Function<File, ActionListener> actionForFileFunction =
-			new Function<File, ActionListener>() {
+		new Function<File, ActionListener>() {
+			public ActionListener apply(final File file) {
 
-		public ActionListener apply(final File file) {
-
-			return new ActionListener() {
-				@Override public void actionPerformed(ActionEvent e) {
-					new OpenOSMAction(ViewerFrame.this, data,
-							renderOptions).openOSMFile(file, true);
-				}
-			};
-
-		}
-
-	};
+				return new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						new OpenOSMAction(ViewerFrame.this, data, renderOptions)
+							.openOSMFile(file, true);
+					}
+				};
+			}
+		};
 
 	private void createMenuBar() {
 
@@ -158,95 +156,98 @@ public class ViewerFrame extends JFrame {
 			JMenu subMenu = new JMenu("File");
 			subMenu.setMnemonic(VK_F);
 			subMenu.add(new OpenOSMAction(this, data, renderOptions));
-			subMenu.add(new ReloadOSMAction(this, data, renderOptions, configFile));
+			subMenu.add(
+				new ReloadOSMAction(this, data, renderOptions, configFile));
 			subMenu.add(recentFilesMenu);
 			subMenu.add(new DownloadOverpassAction(this, data, renderOptions));
-			subMenu.add(new ExportObjAction(this, data, messageManager, renderOptions));
-			subMenu.add(new ExportObjDirAction(this, data, messageManager, renderOptions));
-			subMenu.add(new ExportPOVRayAction(this, data, messageManager, renderOptions));
-			subMenu.add(new ExportScreenshotAction(this, data, messageManager, renderOptions));
+			subMenu.add(
+				new ExportObjAction(this, data, messageManager, renderOptions));
+			subMenu.add(new ExportObjDirAction(this, data, messageManager,
+											   renderOptions));
+			subMenu.add(new ExportPOVRayAction(this, data, messageManager,
+											   renderOptions));
+			subMenu.add(new ExportScreenshotAction(this, data, messageManager,
+												   renderOptions));
 			subMenu.add(new StatisticsAction(this, data));
 			subMenu.add(new ExitAction());
 			menu.add(subMenu);
-
-		} { //"View"
+		}
+		{ //"View"
 
 			JMenu subMenu = new JMenu("View");
 			subMenu.setMnemonic(VK_V);
 
-			subMenu.add(new JCheckBoxMenuItem(new ToggleWireframeAction(this, data, renderOptions)));
-			subMenu.add(new JCheckBoxMenuItem(new ToggleBackfaceCullingAction(this, data, renderOptions)));
+			subMenu.add(new JCheckBoxMenuItem(
+				new ToggleWireframeAction(this, data, renderOptions)));
+			subMenu.add(new JCheckBoxMenuItem(
+				new ToggleBackfaceCullingAction(this, data, renderOptions)));
 
 			initAndAddDebugView(subMenu, VK_W, true,
-					new WorldObjectView(renderOptions));
-			initAndAddDebugView(subMenu, -1, true,
-					new SkyboxView());
+								new WorldObjectView(renderOptions));
+			initAndAddDebugView(subMenu, -1, true, new SkyboxView());
 
 			subMenu.addSeparator();
 
+			initAndAddDebugView(subMenu, VK_K, true, new SunTimeView());
 			initAndAddDebugView(subMenu, -1, false,
-					new TerrainBoundaryAABBDebugView());
-			initAndAddDebugView(subMenu, VK_L, false,
-					new ClearingDebugView());
-			initAndAddDebugView(subMenu, VK_D, false,
-					new MapDataDebugView());
+								new TerrainBoundaryAABBDebugView());
+			initAndAddDebugView(subMenu, VK_L, false, new ClearingDebugView());
+			initAndAddDebugView(subMenu, VK_D, false, new MapDataDebugView());
 			initAndAddDebugView(subMenu, VK_E, false,
-					new EleConnectorDebugView());
+								new EleConnectorDebugView());
 			initAndAddDebugView(subMenu, VK_C, false,
-					new EleConstraintDebugView());
-			initAndAddDebugView(subMenu, VK_R, false,
-					new RoofDataDebugView());
-			initAndAddDebugView(subMenu, -1, false,
-					new FaceDebugView());
-			initAndAddDebugView(subMenu, VK_X, false,
-					new NetworkDebugView());
-			initAndAddDebugView(subMenu, VK_Q, false,
-					new QuadtreeDebugView());
-			initAndAddDebugView(subMenu, -1, false,
-					new Map2dTreeDebugView());
+								new EleConstraintDebugView());
+			initAndAddDebugView(subMenu, VK_R, false, new RoofDataDebugView());
+			initAndAddDebugView(subMenu, -1, false, new FaceDebugView());
+			initAndAddDebugView(subMenu, VK_X, false, new NetworkDebugView());
+			initAndAddDebugView(subMenu, VK_Q, false, new QuadtreeDebugView());
+			initAndAddDebugView(subMenu, -1, false, new Map2dTreeDebugView());
 			initAndAddDebugView(subMenu, VK_B, false,
-					new TerrainBoundaryDebugView());
+								new TerrainBoundaryDebugView());
 			initAndAddDebugView(subMenu, -1, false,
-					new WorldObjectNormalsDebugView());
+								new WorldObjectNormalsDebugView());
 			initAndAddDebugView(subMenu, -1, false,
-					new MapDataBoundsDebugView());
-			initAndAddDebugView(subMenu, -1, false,
-					new OrthoBoundsDebugView());
+								new MapDataBoundsDebugView());
+			initAndAddDebugView(subMenu, -1, false, new OrthoBoundsDebugView());
+			subMenu.add(new JCheckBoxMenuItem(
+				new ToggleDebugViewAction(new InternalCoordsDebugView(), -1,
+										  false, this, data, renderOptions)));
 			subMenu.add(new JCheckBoxMenuItem(new ToggleDebugViewAction(
-					new InternalCoordsDebugView(), -1, false,
-					this, data, renderOptions)));
-			subMenu.add(new JCheckBoxMenuItem(new ToggleDebugViewAction(
-					new LatLonDebugView(), -1, false,
-					this, data, renderOptions)));
+				new LatLonDebugView(), -1, false, this, data, renderOptions)));
+			initAndAddDebugView(subMenu, -1, false, new EleDebugView());
+			initAndAddDebugView(
+				subMenu, -1, false,
+				new NaturalNeighborInterpolatorDebugView(renderOptions));
+			initAndAddDebugView(
+				subMenu, -1, false,
+				new LeastSquaresInterpolatorDebugView(renderOptions));
+			initAndAddDebugView(
+				subMenu, -1, false,
+				new InverseDistanceWeightingInterpolatorDebugView(
+					renderOptions));
 			initAndAddDebugView(subMenu, -1, false,
-					new EleDebugView());
+								new LinearInterpolatorDebugView(renderOptions));
 			initAndAddDebugView(subMenu, -1, false,
-					new NaturalNeighborInterpolatorDebugView(renderOptions));
-			initAndAddDebugView(subMenu, -1, false,
-					new LeastSquaresInterpolatorDebugView(renderOptions));
-			initAndAddDebugView(subMenu, -1, false,
-					new InverseDistanceWeightingInterpolatorDebugView(renderOptions));
-			initAndAddDebugView(subMenu, -1, false,
-					new LinearInterpolatorDebugView(renderOptions));
-			initAndAddDebugView(subMenu, -1, false,
-					new ShadowView(renderOptions));
+								new ShadowView(renderOptions));
 
 			menu.add(subMenu);
-
-		} { //"Camera"
+		}
+		{ //"Camera"
 
 			JMenu subMenu = new JMenu("Camera");
 			subMenu.setMnemonic(VK_C);
 			subMenu.add(new ResetCameraAction(this, data, renderOptions));
-			subMenu.add(new SetCameraToCoordinateAction(this, data, renderOptions));
+			subMenu.add(
+				new SetCameraToCoordinateAction(this, data, renderOptions));
 			subMenu.add(new OrthoTileAction(this, data, renderOptions));
 			subMenu.add(new OrthoBoundsAction(this, data, renderOptions));
-			subMenu.add(new JCheckBoxMenuItem(
-					new ToggleOrthographicProjectionAction(this, data, renderOptions)));
+			subMenu.add(
+				new JCheckBoxMenuItem(new ToggleOrthographicProjectionAction(
+					this, data, renderOptions)));
 			subMenu.add(new ShowCameraConfigurationAction(data, renderOptions));
 			menu.add(subMenu);
-
-		} { //"Options"
+		}
+		{ //"Options"
 
 			JMenu subMenu = new JMenu("Options");
 			subMenu.setMnemonic(VK_O);
@@ -256,22 +257,20 @@ public class ViewerFrame extends JFrame {
 
 			ButtonGroup interpolatorGroup = new ButtonGroup();
 
-			List<Class<? extends TerrainInterpolator>> interpolatorClasses = asList(
-					ZeroInterpolator.class,
-					LinearInterpolator.class,
-					InverseDistanceWeightingInterpolator.class,
-					LeastSquaresInterpolator.class,
-					NaturalNeighborInterpolator.class);
+			List<Class<? extends TerrainInterpolator>> interpolatorClasses =
+				asList(ZeroInterpolator.class, LinearInterpolator.class,
+					   InverseDistanceWeightingInterpolator.class,
+					   LeastSquaresInterpolator.class,
+					   NaturalNeighborInterpolator.class);
 
 			for (Class<? extends TerrainInterpolator> c : interpolatorClasses) {
 
-				JRadioButtonMenuItem item = new JRadioButtonMenuItem(
-						new SetTerrainInterpolatorAction(c,
-								this, data, renderOptions));
+				JRadioButtonMenuItem item =
+					new JRadioButtonMenuItem(new SetTerrainInterpolatorAction(
+						c, this, data, renderOptions));
 
 				interpolatorGroup.add(item);
 				interpolatorMenu.add(item);
-
 			}
 
 			JMenu enforcerMenu = new JMenu("EleConstraintEnforcer");
@@ -279,24 +278,23 @@ public class ViewerFrame extends JFrame {
 
 			ButtonGroup enforcerGroup = new ButtonGroup();
 
-			List<Class<? extends EleConstraintEnforcer>> enforcerClasses = asList(
-					NoneEleConstraintEnforcer.class,
-					SimpleEleConstraintEnforcer.class);
+			List<Class<? extends EleConstraintEnforcer>> enforcerClasses =
+				asList(NoneEleConstraintEnforcer.class,
+					   SimpleEleConstraintEnforcer.class);
 
 			for (Class<? extends EleConstraintEnforcer> c : enforcerClasses) {
 
-				JRadioButtonMenuItem item = new JRadioButtonMenuItem(
-						new SetEleConstraintEnforcerAction(c,
-								this, data, renderOptions));
+				JRadioButtonMenuItem item =
+					new JRadioButtonMenuItem(new SetEleConstraintEnforcerAction(
+						c, this, data, renderOptions));
 
 				enforcerGroup.add(item);
 				enforcerMenu.add(item);
-
 			}
 
 			menu.add(subMenu);
-
-		} { //"Help"
+		}
+		{ //"Help"
 
 			JMenu subMenu = new JMenu("Help");
 			subMenu.add(new HelpControlsAction());
@@ -304,32 +302,26 @@ public class ViewerFrame extends JFrame {
 			subMenu.setMnemonic(VK_H);
 
 			menu.add(subMenu);
-
 		}
 
 		this.setJMenuBar(menu);
-
 	}
 
 	/**
 	 * initializes a debug view and adds a menu item for it
 	 */
-	private void initAndAddDebugView(JMenu menu, int keyEvent,
-			boolean enabled, DebugView debugView) {
+	private void initAndAddDebugView(JMenu menu, int keyEvent, boolean enabled,
+									 DebugView debugView) {
 
 		debugView.setConfiguration(data.getConfig());
 
 		menu.add(new JCheckBoxMenuItem(new ToggleDebugViewAction(
-				debugView, keyEvent, enabled,
-				this, data, renderOptions)));
+			debugView, keyEvent, enabled, this, data, renderOptions)));
 
 		debugViews.add(debugView);
-
 	}
 
-	public MessageManager getMessageManager() {
-		return messageManager;
-	}
+	public MessageManager getMessageManager() { return messageManager; }
 
 	/**
 	 * Prepare OpenGL (Profile/Capabilities) and create matching canvas.
@@ -353,11 +345,14 @@ public class ViewerFrame extends JFrame {
 		}
 
 		if ("shader".equals(config.getString("joglImplementation"))) {
-			if ("shadowVolumes".equals(config.getString("shadowImplementation")) || "both".equals(config.getString("shadowImplementation")))
+			if ("shadowVolumes".equals(
+					config.getString("shadowImplementation")) ||
+				"both".equals(config.getString("shadowImplementation")))
 				caps.setStencilBits(STENCIL_BITS);
 		}
 
-		glCanvas = new ViewerGLCanvas(data, messageManager, renderOptions, caps);
+		glCanvas =
+			new ViewerGLCanvas(data, messageManager, renderOptions, caps);
 		add(glCanvas, BorderLayout.CENTER);
 
 		new FileDrop(glCanvas, new FileDrop.Listener() {
@@ -370,7 +365,8 @@ public class ViewerFrame extends JFrame {
 			}
 		});
 
-		DefaultNavigation navigation = new DefaultNavigation(this, renderOptions);
+		DefaultNavigation navigation =
+			new DefaultNavigation(this, renderOptions);
 		glCanvas.addMouseListener(navigation);
 		glCanvas.addMouseMotionListener(navigation);
 		glCanvas.addMouseWheelListener(navigation);
@@ -378,14 +374,17 @@ public class ViewerFrame extends JFrame {
 	}
 
 	/**
-	 * Update with new configuration. May recreate the canvas when the OpenGL-Parameters changed
+	 * Update with new configuration. May recreate the canvas when the
+	 * OpenGL-Parameters changed
 	 */
 	public void setConfiguration(Configuration config) {
 		if (!checkConfiguration(config)) {
-			System.out.println("OpenGL configuration changed. Recreating canvas.");
+			System.out.println(
+				"OpenGL configuration changed. Recreating canvas.");
 
-			// reset all DebugViews to free resources bound to the old OpenGL context. The context still needs to exist at this point
-			for(DebugView d : debugViews) {
+			// reset all DebugViews to free resources bound to the old OpenGL
+			// context. The context still needs to exist at this point
+			for (DebugView d : debugViews) {
 				d.reset();
 			}
 
@@ -399,9 +398,27 @@ public class ViewerFrame extends JFrame {
 		}
 	}
 
+	public void resetCanvas() {
+		System.out.println("redraw");
+		// reset all DebugViews to free resources bound to the old OpenGL
+		// context. The context still needs to exist at this point
+		for (DebugView d : debugViews) {
+			d.reset();
+		}
+
+		// destroy old OpenGL context
+		remove(glCanvas);
+		glCanvas.destroy();
+
+		// recreate
+		createCanvas(data.getConfig());
+		pack();
+	}
+
 	/**
 	 * Check if the current OpenGL-Parameters match the given configuration.
-	 * @return true if the configuration matches, false otherwise. In the latter case the GLCanvas needs to be recreated
+	 * @return true if the configuration matches, false otherwise. In the latter
+	 *     case the GLCanvas needs to be recreated
 	 */
 	private boolean checkConfiguration(Configuration config) {
 		if ("shader".equals(config.getString("joglImplementation"))) {
@@ -419,13 +436,13 @@ public class ViewerFrame extends JFrame {
 		if (glCanvas.getChosenGLCapabilities().getSampleBuffers() != msaa > 0)
 			return false;
 
-
-		if ("shader".equals(config.getString("joglImplementation"))
-				&& ("shadowVolumes".equals(config.getString("shadowImplementation")) || "both".equals(config.getString("shadowImplementation")))) {
-			if (glCanvas.getChosenGLCapabilities().getStencilBits() != STENCIL_BITS)
+		if ("shader".equals(config.getString("joglImplementation")) &&
+			("shadowVolumes".equals(config.getString("shadowImplementation")) ||
+			 "both".equals(config.getString("shadowImplementation")))) {
+			if (glCanvas.getChosenGLCapabilities().getStencilBits() !=
+				STENCIL_BITS)
 				return false;
 		}
 		return true;
 	}
-
 }

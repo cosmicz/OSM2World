@@ -32,16 +32,16 @@
 
 	<repositories>
 		<repository>
+			<id>local-libs</id>
+			<url>file:///${project.basedir}/local-libs</url>
+		</repository>
+		<repository>
 		    <id>topobyte-repo</id>
 		    <url>http://mvn.topobyte.de</url>
 		</repository>
 		<repository>
 		    <id>slimjars-repo</id>
 		    <url>http://mvn.slimjars.com</url>
-		</repository>
-		<repository>
-			<id>local-libs</id>
-			<url>file:///${project.basedir}/local-libs</url>
 		</repository>
 	</repositories>
 
@@ -155,7 +155,7 @@
 		<dependency>
 			<groupId>sunflower</groupId>
 			<artifactId>sunflower</artifactId>
-			<version>0.1</version>
+			<version>0.2</version>
 		</dependency>
 
 		<dependency>

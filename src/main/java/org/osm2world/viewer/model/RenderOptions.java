@@ -1,12 +1,16 @@
 package org.osm2world.viewer.model;
 
+import com.optivoltlabs.sunflower.SunPosition;
+import com.optivoltlabs.sunflower.SunPosition.SunPositionAt;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.HashSet;
 import java.util.Set;
-
 import org.osm2world.core.map_elevation.creation.EleConstraintEnforcer;
 import org.osm2world.core.map_elevation.creation.NoneEleConstraintEnforcer;
 import org.osm2world.core.map_elevation.creation.TerrainInterpolator;
 import org.osm2world.core.map_elevation.creation.ZeroInterpolator;
+import org.osm2world.core.target.common.lighting.GlobalLightingParameters;
 import org.osm2world.core.target.common.rendering.Camera;
 import org.osm2world.core.target.common.rendering.Projection;
 import org.osm2world.viewer.view.debug.DebugView;
@@ -16,6 +20,10 @@ public class RenderOptions {
 	public Camera camera = null;
 	public Projection projection = Defaults.PERSPECTIVE_PROJECTION;
 
+	public SunPosition sunPosition =
+		new SunPosition(37.77, -122.43, ZoneOffset.of("-7"));
+	public LocalDateTime localDateTime = LocalDateTime.now();
+
 	public Set<DebugView> activeDebugViews = new HashSet<DebugView>();
 
 	private boolean showGrid = true;
@@ -23,39 +31,45 @@ public class RenderOptions {
 	private boolean wireframe = false;
 	private boolean backfaceCulling = true;
 
-	Class<? extends TerrainInterpolator> interpolatorClass = ZeroInterpolator.class;
-	Class<? extends EleConstraintEnforcer> enforcerClass = NoneEleConstraintEnforcer.class;
+	Class<? extends TerrainInterpolator> interpolatorClass =
+		ZeroInterpolator.class;
+	Class<? extends EleConstraintEnforcer> enforcerClass =
+		NoneEleConstraintEnforcer.class;
 
-	public boolean isShowGrid() {
-		return showGrid;
-	}
-	public void setShowGrid(boolean showGrid) {
-		this.showGrid = showGrid;
-	}
-	public boolean isShowTerrain() {
-		return showTerrain;
-	}
+	public boolean isShowGrid() { return showGrid; }
+	public void setShowGrid(boolean showGrid) { this.showGrid = showGrid; }
+	public boolean isShowTerrain() { return showTerrain; }
 	public void setShowTerrain(boolean showTerrain) {
 		this.showTerrain = showTerrain;
 	}
-	public boolean isWireframe() {
-		return wireframe;
-	}
-	public void setWireframe(boolean wireframe) {
-		this.wireframe = wireframe;
-	}
-	public boolean isBackfaceCulling() {
-		return backfaceCulling;
-	}
+	public boolean isWireframe() { return wireframe; }
+	public void setWireframe(boolean wireframe) { this.wireframe = wireframe; }
+	public boolean isBackfaceCulling() { return backfaceCulling; }
 	public void setBackfaceCulling(boolean backfaceCulling) {
 		this.backfaceCulling = backfaceCulling;
+	}
+
+	public void plusMinutes(long delta) {
+		this.localDateTime = this.localDateTime.plusMinutes(delta);
+		SunPositionAt spa = this.sunPosition.at(this.localDateTime);
+		GlobalLightingParameters.DEFAULT.setDirectionFromAzEl(spa.azimuth(),
+															  spa.elevation());
+
+		System.out.println("[SunPosition] time: " +
+						   this.localDateTime.toString());
+		System.out.println("[SunPosition] azimuth: " + spa.azimuth() +
+						   " elevation: " + spa.elevation());
+		System.out.println(
+			"[SunPosition] vector: " +
+			GlobalLightingParameters.DEFAULT.lightFromDirection.toString());
 	}
 
 	public Class<? extends TerrainInterpolator> getInterpolatorClass() {
 		return interpolatorClass;
 	}
 
-	public void setInterpolatorClass(Class<? extends TerrainInterpolator> interpolatorClass) {
+	public void setInterpolatorClass(
+		Class<? extends TerrainInterpolator> interpolatorClass) {
 		this.interpolatorClass = interpolatorClass;
 	}
 
@@ -63,8 +77,8 @@ public class RenderOptions {
 		return enforcerClass;
 	}
 
-	public void setEnforcerClass(Class<? extends EleConstraintEnforcer> enforcerClass) {
+	public void
+	setEnforcerClass(Class<? extends EleConstraintEnforcer> enforcerClass) {
 		this.enforcerClass = enforcerClass;
 	}
-
 }
